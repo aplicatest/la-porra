@@ -157,17 +157,38 @@ input {
   padding: 1.5rem 1rem;
 }
 
-.jornada-selector,
 .ranking-tabs {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
   margin-bottom: 1.5rem;
 }
-.jornada-selector button,
 .ranking-tabs button {
   background: var(--surface-alt);
   color: var(--text);
+}
+
+.jornada-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.jornada-nav button {
+  background: var(--surface-alt);
+  color: var(--text);
+  padding: 0.5rem 0.9rem;
+  flex-shrink: 0;
+}
+.jornada-nav__label,
+.jornada-nav button.active {
+  min-width: 7rem;
+  text-align: center;
+}
+.jornada-nav__label {
+  font-weight: 700;
 }
 
 .match-list {
@@ -183,8 +204,10 @@ input {
 }
 .match-card__teams {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 600;
   font-size: 1.05rem;
 }
@@ -245,6 +268,10 @@ input {
   gap: 0.25rem;
 }
 
+.ranking-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+}
 .ranking-table {
   width: 100%;
   border-collapse: collapse;
@@ -307,6 +334,33 @@ input {
 @media (max-width: 480px) {
   .app-header {
     padding: 0.6rem 1rem;
+    gap: 0.75rem;
+  }
+  .app-header nav {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .app-header__player {
+    margin-left: auto;
+  }
+  .page {
+    padding: 1rem 0.75rem;
+  }
+  .match-card__teams {
+    font-size: 0.95rem;
+    gap: 0.4rem;
+  }
+  .jornada-nav {
+    gap: 0.5rem;
+  }
+  .jornada-nav__label,
+  .jornada-nav button.active {
+    min-width: 5rem;
+    font-size: 0.9rem;
+  }
+  .ranking-tabs {
+    justify-content: center;
   }
   .admin-result-row {
     flex-direction: column;

@@ -4,23 +4,25 @@ export default function RankingTable({ standings }) {
   }
 
   return (
-    <table className="ranking-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Jugador</th>
-          <th>Puntos</th>
-        </tr>
-      </thead>
-      <tbody>
-        {standings.map((s, i) => (
-          <tr key={s.uid}>
-            <td>{i + 1}</td>
-            <td>{s.name}</td>
-            <td>{s.points}</td>
+    <div className="ranking-table-wrap">
+      <table className="ranking-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Jugador</th>
+            <th>Puntos</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {standings.map((s, i) => (
+            <tr key={s.uid}>
+              <td>{i + 1}</td>
+              <td>{s.name}</td>
+              <td>{s.points}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }

@@ -7,6 +7,7 @@ export default function RankingPage() {
   const [predictions, setPredictions] = useState([])
   const [players, setPlayers] = useState({})
   const [view, setView] = useState('general')
+  const [jornadaCursor, setJornadaCursor] = useState(null)
 
   useEffect(() => {
     return onSnapshot(collection(db, 'players'), (snap) => {
@@ -32,6 +33,19 @@ export default function RankingPage() {
     [predictions]
   )
 
+  useEffect(() => {
+    if (jornadaCursor === null && jornadas.length > 0) {
+      setJornadaCursor(jornadas[jornadas.length - 1])
+    }
+  }, [jornadas, jornadaCursor])
+
+  const cursorIndex = jornadas.indexOf(jornadaCursor)
+
+  function goToJornada(j) {
+    setJornadaCursor(j)
+    setView(j)
+  }
+
   const standings = useMemo(() => {
     const relevant = view === 'general' ? predictions : predictions.filter((p) => p.jornada === view)
     const totals = {}
@@ -49,11 +63,27 @@ export default function RankingPage() {
         <button className={view === 'general' ? 'active' : ''} onClick={() => setView('general')}>
           General
         </button>
-        {jornadas.map((j) => (
-          <button key={j} className={view === j ? 'active' : ''} onClick={() => setView(j)}>
-            J{j}
+        <div className="jornada-nav">
+          <button
+            onClick={() => goToJornada(jornadas[cursorIndex - 1])}
+            disabled={cursorIndex <= 0}
+          >
+            ◀
           </button>
-        ))}
+          <button
+            className={view === jornadaCursor ? 'active' : ''}
+            onClick={() => goToJornada(jornadaCursor)}
+            disabled={jornadaCursor === null}
+          >
+            Jornada {jornadaCursor ?? '-'}
+          </button>
+          <button
+            onClick={() => goToJornada(jornadas[cursorIndex + 1])}
+            disabled={cursorIndex >= jornadas.length - 1}
+          >
+            ▶
+          </button>
+        </div>
       </div>
       <RankingTable standings={standings} />
     </div>

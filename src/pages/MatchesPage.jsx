@@ -80,6 +80,8 @@ export default function MatchesPage() {
     .filter((m) => m.jornada === selectedJornada)
     .sort((a, b) => a.kickoff?.toMillis() - b.kickoff?.toMillis())
 
+  const jornadaIndex = jornadas.indexOf(selectedJornada)
+
   if (matches.length === 0) {
     return (
       <div className="page">
@@ -90,16 +92,20 @@ export default function MatchesPage() {
 
   return (
     <div className="page">
-      <div className="jornada-selector">
-        {jornadas.map((j) => (
-          <button
-            key={j}
-            className={j === selectedJornada ? 'active' : ''}
-            onClick={() => setSelectedJornada(j)}
-          >
-            J{j}
-          </button>
-        ))}
+      <div className="jornada-nav">
+        <button
+          onClick={() => setSelectedJornada(jornadas[jornadaIndex - 1])}
+          disabled={jornadaIndex <= 0}
+        >
+          ◀
+        </button>
+        <span className="jornada-nav__label">Jornada {selectedJornada}</span>
+        <button
+          onClick={() => setSelectedJornada(jornadas[jornadaIndex + 1])}
+          disabled={jornadaIndex >= jornadas.length - 1}
+        >
+          ▶
+        </button>
       </div>
       <div className="match-list">
         {matchesInJornada.map((match) => (
