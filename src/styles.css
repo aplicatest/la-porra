@@ -160,7 +160,8 @@ input {
 .ranking-tabs {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 1rem;
   flex-wrap: wrap;
   margin-bottom: 1.5rem;
 }
@@ -174,20 +175,19 @@ input {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
+}
+.page > .jornada-nav {
   margin-bottom: 1.5rem;
 }
 .jornada-nav button {
   background: var(--surface-alt);
   color: var(--text);
-  padding: 0.5rem 0.9rem;
+  padding: 0.5rem 1rem;
   flex-shrink: 0;
 }
-.jornada-nav__label,
-.jornada-nav button.active {
+.jornada-nav__current {
   min-width: 7rem;
   text-align: center;
-}
-.jornada-nav__label {
   font-weight: 700;
 }
 
@@ -354,13 +354,9 @@ input {
   .jornada-nav {
     gap: 0.5rem;
   }
-  .jornada-nav__label,
-  .jornada-nav button.active {
+  .jornada-nav__current {
     min-width: 5rem;
     font-size: 0.9rem;
-  }
-  .ranking-tabs {
-    justify-content: center;
   }
   .admin-result-row {
     flex-direction: column;

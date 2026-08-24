@@ -71,7 +71,7 @@ export default function RankingPage() {
             ◀
           </button>
           <button
-            className={view === jornadaCursor ? 'active' : ''}
+            className={`jornada-nav__current ${view === jornadaCursor ? 'active' : ''}`}
             onClick={() => goToJornada(jornadaCursor)}
             disabled={jornadaCursor === null}
           >

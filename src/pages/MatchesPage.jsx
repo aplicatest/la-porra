@@ -99,7 +99,7 @@ export default function MatchesPage() {
         >
           ◀
         </button>
-        <span className="jornada-nav__label">Jornada {selectedJornada}</span>
+        <span className="jornada-nav__current">Jornada {selectedJornada}</span>
         <button
           onClick={() => setSelectedJornada(jornadas[jornadaIndex + 1])}
           disabled={jornadaIndex >= jornadas.length - 1}
