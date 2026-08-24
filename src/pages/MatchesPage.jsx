@@ -13,11 +13,20 @@ export default function MatchesPage() {
   const [selectedJornada, setSelectedJornada] = useState(null)
   const [now, setNow] = useState(() => Date.now())
 
-  // Recalcula "now" cada 30s para que un partido se bloquee/revele solo, sin
-  // necesidad de recargar la pagina justo cuando empieza.
+  // Recalcula "now" cada 10s para que un partido se bloquee/revele solo, sin
+  // necesidad de recargar la pagina justo cuando empieza. Ademas se refresca
+  // al instante al volver a la pestaña, porque los navegadores pausan los
+  // intervalos en pestañas en segundo plano y "now" podria quedar desfasado.
   useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 30000)
-    return () => clearInterval(interval)
+    const interval = setInterval(() => setNow(Date.now()), 10000)
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') setNow(Date.now())
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [])
 
   useEffect(() => {

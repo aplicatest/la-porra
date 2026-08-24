@@ -18,6 +18,15 @@ export default function MatchCard({ match, now, myPrediction, revealed, players 
     e.preventDefault()
     if (homeGoals === '' || awayGoals === '') return
 
+    // Comprobacion con la hora real en este instante (no el "now" recibido
+    // por prop, que puede llevar unos segundos de retraso) para no intentar
+    // siquiera guardar si el partido ya ha empezado, y dar un mensaje claro
+    // en vez de un fallo generico si aun asi se llega tarde por muy poco.
+    if (match.kickoff?.toMillis() <= Date.now()) {
+      setSaveError('El partido ya ha empezado, no se puede pronosticar.')
+      return
+    }
+
     setSaving(true)
     setSaveError(null)
     try {
