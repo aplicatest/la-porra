@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
+import PredictionsModal from './PredictionsModal'
 
 export default function MatchCard({ match, now, myPrediction, revealed, players }) {
   const { player } = useAuth()
@@ -11,6 +12,7 @@ export default function MatchCard({ match, now, myPrediction, revealed, players 
   const [awayGoals, setAwayGoals] = useState(myPrediction?.awayGoals ?? '')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
+  const [showModal, setShowModal] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -86,23 +88,30 @@ export default function MatchCard({ match, now, myPrediction, revealed, players 
           {saveError && <p className="error">{saveError}</p>}
         </form>
       ) : (
-        <div className="match-card__predictions">
+        <div
+          className="match-card__predictions"
+          onClick={() => setShowModal(true)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && setShowModal(true)}
+        >
           <p className="my-prediction">
             Tu pronóstico:{' '}
             {myPrediction ? `${myPrediction.homeGoals} - ${myPrediction.awayGoals}` : 'no pronosticaste'}
             {myPrediction?.points != null && <strong> ({myPrediction.points} pts)</strong>}
           </p>
-          <ul>
-            {revealed
-              .filter((p) => p.uid !== player.uid)
-              .map((p) => (
-                <li key={p.id}>
-                  {players[p.uid] || p.playerName}: {p.homeGoals} - {p.awayGoals}
-                  {p.points != null && ` (${p.points} pts)`}
-                </li>
-              ))}
-          </ul>
+          <p className="see-all-link">Ver pronósticos de todos →</p>
         </div>
+      )}
+
+      {showModal && (
+        <PredictionsModal
+          match={match}
+          revealed={revealed}
+          players={players}
+          myUid={player.uid}
+          onClose={() => setShowModal(false)}
+        />
       )}
     </div>
   )

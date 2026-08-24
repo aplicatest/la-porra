@@ -16,6 +16,10 @@ export default function AdminPage() {
 
   return (
     <div className="page admin-page">
+      <p className="admin-note">
+        El calendario, los horarios y los resultados se actualizan solos cada 10 minutos. Usa esto solo
+        para casos manuales: un partido que falte, o corregir un dato que haya llegado mal.
+      </p>
       <section>
         <h2>Nuevo partido</h2>
         <AdminMatchForm />
