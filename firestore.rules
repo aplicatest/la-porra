@@ -1,0 +1,95 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Sin Cloud Functions (plan gratuito), el rol de admin se valida aqui:
+    // el propio documento players/{uid} guarda isAdmin, fijado una unica vez
+    // en su creacion segun que codigo se aporte (ver reglas de /players).
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/players/$(request.auth.uid))
+        && get(/databases/$(database)/documents/players/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // Codigos de invitacion. No se leen nunca directamente desde el cliente,
+    // solo se consultan internamente via get() desde otras reglas.
+    match /config/{docId} {
+      allow read, write: if false;
+    }
+
+    match /players/{uid} {
+      allow get: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isSignedIn();
+
+      allow create: if isSignedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'code', 'isAdmin', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 40
+        && (
+          (request.resource.data.code == get(/databases/$(database)/documents/config/app).data.playerCode
+            && request.resource.data.isAdmin == false)
+          ||
+          (request.resource.data.code == get(/databases/$(database)/documents/config/app).data.adminCode
+            && request.resource.data.isAdmin == true)
+        );
+
+      allow update, delete: if false;
+    }
+
+    match /matches/{matchId} {
+      // Los partidos (equipos, jornada, hora) no son secretos; solo el marcador
+      // se rellena mas tarde y viaja dentro del mismo documento.
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /predictions/{predictionId} {
+      // Cada uno ve siempre el suyo. El de los demas solo es visible cuando
+      // ya ha pasado el kickoff (denormalizado en el propio pronostico para
+      // poder consultarlo de forma segura, ver nota en create). Admin ve todo.
+      allow get, list: if isSignedIn() && (
+        resource.data.uid == request.auth.uid ||
+        resource.data.kickoff <= request.time ||
+        isAdmin()
+      );
+
+      allow create: if isSignedIn()
+        && predictionId == (request.resource.data.matchId + '_' + request.auth.uid)
+        && request.resource.data.keys().hasOnly(
+          ['matchId', 'uid', 'playerName', 'jornada', 'homeGoals', 'awayGoals', 'kickoff', 'points', 'createdAt']
+        )
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.homeGoals is int && request.resource.data.homeGoals >= 0
+        && request.resource.data.awayGoals is int && request.resource.data.awayGoals >= 0
+        && request.resource.data.points == null
+        // El kickoff que se guarda en el pronostico tiene que coincidir con el
+        // del partido real, para que la regla de lectura de arriba sea fiable.
+        && request.resource.data.kickoff == get(/databases/$(database)/documents/matches/$(request.resource.data.matchId)).data.kickoff
+        && request.time < request.resource.data.kickoff;
+
+      allow update: if isSignedIn() && (
+        (
+          // El jugador puede corregir su pronostico mientras no haya empezado el partido.
+          resource.data.uid == request.auth.uid
+          && request.time < resource.data.kickoff
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['homeGoals', 'awayGoals'])
+          && request.resource.data.homeGoals is int && request.resource.data.homeGoals >= 0
+          && request.resource.data.awayGoals is int && request.resource.data.awayGoals >= 0
+        ) ||
+        (
+          // El admin solo puede tocar los puntos (calculados al cerrar el partido).
+          isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points'])
+        )
+      );
+
+      allow delete: if false;
+    }
+  }
+}

@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.env.local
+.firebase
+firebase-debug.log
+.DS_Store
+scripts/.env
+scripts/service-account.json
+scripts/*.json
