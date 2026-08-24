@@ -7,12 +7,20 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // OJO: isSignedIn() solo significa "ha iniciado sesion de Google", algo
+    // que cualquiera puede hacer sin conocer el codigo de invitacion (la
+    // config de Firebase es publica por diseño). isPlayer() es la que
+    // realmente identifica a alguien del grupo: exige ademas tener ya un
+    // documento en players/, que solo se crea validando el codigo correcto.
+    function isPlayer() {
+      return isSignedIn() && exists(/databases/$(database)/documents/players/$(request.auth.uid));
+    }
+
     // Sin Cloud Functions (plan gratuito), el rol de admin se valida aqui:
     // el propio documento players/{uid} guarda isAdmin, fijado una unica vez
     // en su creacion segun que codigo se aporte (ver reglas de /players).
     function isAdmin() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/players/$(request.auth.uid))
+      return isPlayer()
         && get(/databases/$(database)/documents/players/$(request.auth.uid)).data.isAdmin == true;
     }
 
@@ -24,7 +32,7 @@ service cloud.firestore {
 
     match /players/{uid} {
       allow get: if isSignedIn() && (request.auth.uid == uid || isAdmin());
-      allow list: if isSignedIn();
+      allow list: if isPlayer();
 
       allow create: if isSignedIn() && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['name', 'code', 'isAdmin', 'createdAt'])
@@ -43,9 +51,12 @@ service cloud.firestore {
     }
 
     match /matches/{matchId} {
-      // Los partidos (equipos, jornada, hora) no son secretos; solo el marcador
-      // se rellena mas tarde y viaja dentro del mismo documento.
-      allow read: if isSignedIn();
+      // Los partidos (equipos, jornada, hora) no son secretos entre el grupo;
+      // solo el marcador se rellena mas tarde y viaja dentro del mismo
+      // documento. Pero si hace falta haber entrado con el codigo (isPlayer),
+      // para no dar ni siquiera esto a cualquiera que solo haya iniciado
+      // sesion de Google sin conocer el codigo.
+      allow read: if isPlayer();
       allow create, update, delete: if isAdmin();
     }
 
@@ -53,13 +64,13 @@ service cloud.firestore {
       // Cada uno ve siempre el suyo. El de los demas solo es visible cuando
       // ya ha pasado el kickoff (denormalizado en el propio pronostico para
       // poder consultarlo de forma segura, ver nota en create). Admin ve todo.
-      allow get, list: if isSignedIn() && (
+      allow get, list: if isPlayer() && (
         resource.data.uid == request.auth.uid ||
         resource.data.kickoff <= request.time ||
         isAdmin()
       );
 
-      allow create: if isSignedIn()
+      allow create: if isPlayer()
         && (
           (
             // El propio jugador crea su pronostico antes del kickoff (flujo normal).
@@ -84,7 +95,7 @@ service cloud.firestore {
         // del partido real, para que la regla de lectura de arriba sea fiable.
         && request.resource.data.kickoff == get(/databases/$(database)/documents/matches/$(request.resource.data.matchId)).data.kickoff;
 
-      allow update: if isSignedIn() && (
+      allow update: if isPlayer() && (
         (
           // El jugador puede corregir su pronostico mientras no haya empezado el partido.
           resource.data.uid == request.auth.uid
