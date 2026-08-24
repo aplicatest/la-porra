@@ -379,6 +379,24 @@ input {
   width: 80px;
 }
 
+.admin-backfill-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.admin-backfill-form select {
+  font: inherit;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text);
+}
+.admin-backfill-form input[type='number'] {
+  width: 70px;
+}
+
 .admin-match-list {
   list-style: none;
   padding: 0;

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { collection, doc, getDocs, query, updateDoc, where, writeBatch } from 'firebase/firestore'
+import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
-import { calculatePoints } from '../utils/scoring'
+import { recomputeMatchPoints } from '../utils/recomputePoints'
 
 export default function AdminResultForm({ match }) {
   const [homeGoals, setHomeGoals] = useState(match.homeGoals ?? '')
@@ -19,17 +19,7 @@ export default function AdminResultForm({ match }) {
       const realHome = Number(homeGoals)
       const realAway = Number(awayGoals)
 
-      const predictionsSnap = await getDocs(
-        query(collection(db, 'predictions'), where('matchId', '==', match.id))
-      )
-
-      const batch = writeBatch(db)
-      predictionsSnap.docs.forEach((predDoc) => {
-        const p = predDoc.data()
-        const points = calculatePoints(p.homeGoals, p.awayGoals, realHome, realAway)
-        batch.update(predDoc.ref, { points })
-      })
-      await batch.commit()
+      const scored = await recomputeMatchPoints(match.id, realHome, realAway)
 
       await updateDoc(doc(db, 'matches', match.id), {
         homeGoals: realHome,
@@ -37,7 +27,7 @@ export default function AdminResultForm({ match }) {
         status: 'finished',
       })
 
-      setMessage(`Guardado: ${predictionsSnap.size} pronósticos puntuados.`)
+      setMessage(`Guardado: ${scored} pronósticos puntuados.`)
     } catch (err) {
       setMessage('Error al guardar el resultado.')
     } finally {

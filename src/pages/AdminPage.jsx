@@ -3,6 +3,7 @@ import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { db } from '../firebase'
 import AdminMatchForm from '../components/AdminMatchForm'
 import AdminResultForm from '../components/AdminResultForm'
+import AdminBackfillForm from '../components/AdminBackfillForm'
 
 export default function AdminPage() {
   const [matches, setMatches] = useState([])
@@ -23,6 +24,14 @@ export default function AdminPage() {
       <section>
         <h2>Nuevo partido</h2>
         <AdminMatchForm />
+      </section>
+      <section>
+        <h2>Introducir pronóstico pasado</h2>
+        <p className="admin-note">
+          Para volcar jornadas ya jugadas antes de tener la app: elige jugador, partido y el marcador que
+          te dijeron. Si el partido ya tiene resultado, recalcula los puntos al instante.
+        </p>
+        <AdminBackfillForm />
       </section>
       <section>
         <h2>Partidos</h2>

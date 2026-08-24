@@ -60,18 +60,29 @@ service cloud.firestore {
       );
 
       allow create: if isSignedIn()
-        && predictionId == (request.resource.data.matchId + '_' + request.auth.uid)
+        && (
+          (
+            // El propio jugador crea su pronostico antes del kickoff (flujo normal).
+            predictionId == (request.resource.data.matchId + '_' + request.auth.uid)
+            && request.resource.data.uid == request.auth.uid
+            && request.time < request.resource.data.kickoff
+          ) ||
+          (
+            // El admin puede introducir el pronostico de cualquiera en cualquier
+            // momento, para volcar jornadas ya jugadas antes de tener la app.
+            isAdmin()
+            && predictionId == (request.resource.data.matchId + '_' + request.resource.data.uid)
+          )
+        )
         && request.resource.data.keys().hasOnly(
           ['matchId', 'uid', 'playerName', 'jornada', 'homeGoals', 'awayGoals', 'kickoff', 'points', 'createdAt']
         )
-        && request.resource.data.uid == request.auth.uid
         && request.resource.data.homeGoals is int && request.resource.data.homeGoals >= 0
         && request.resource.data.awayGoals is int && request.resource.data.awayGoals >= 0
         && request.resource.data.points == null
         // El kickoff que se guarda en el pronostico tiene que coincidir con el
         // del partido real, para que la regla de lectura de arriba sea fiable.
-        && request.resource.data.kickoff == get(/databases/$(database)/documents/matches/$(request.resource.data.matchId)).data.kickoff
-        && request.time < request.resource.data.kickoff;
+        && request.resource.data.kickoff == get(/databases/$(database)/documents/matches/$(request.resource.data.matchId)).data.kickoff;
 
       allow update: if isSignedIn() && (
         (
@@ -83,13 +94,21 @@ service cloud.firestore {
           && request.resource.data.awayGoals is int && request.resource.data.awayGoals >= 0
         ) ||
         (
-          // El admin solo puede tocar los puntos (calculados al cerrar el partido).
+          // El admin puede tocar los puntos (calculados al cerrar el partido).
           isAdmin()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points'])
+        ) ||
+        (
+          // El admin puede corregir el marcador pronosticado de cualquiera en
+          // cualquier momento (mismo caso de volcado/correccion manual).
+          isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['homeGoals', 'awayGoals'])
+          && request.resource.data.homeGoals is int && request.resource.data.homeGoals >= 0
+          && request.resource.data.awayGoals is int && request.resource.data.awayGoals >= 0
         )
       );
 
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
   }
 }
