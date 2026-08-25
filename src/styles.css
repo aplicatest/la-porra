@@ -192,6 +192,12 @@ input {
   font-weight: 700;
 }
 
+.ranking-tabs button.active,
+.jornada-nav button.active {
+  background: var(--accent-dark);
+  color: #fff;
+}
+
 .match-list {
   display: flex;
   flex-direction: column;
