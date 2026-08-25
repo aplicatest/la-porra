@@ -139,12 +139,18 @@ async function syncMatch(fdMatch, calculatePoints) {
 // (380 x 2 x 144 ejecuciones/dia > 100.000 operaciones). Para una carga o
 // revision completa de toda la temporada, ejecutar el script en local
 // (npm run sync-calendar), donde no aplica esta ventana.
-const RECENT_WINDOW_MS = { past: 1 * 24 * 60 * 60 * 1000, future: 21 * 24 * 60 * 60 * 1000 }
+const RECENT_WINDOW_MS = { past: 5 * 60 * 60 * 1000, future: 8 * 24 * 60 * 60 * 1000 }
 
+// Un partido ya finalizado hace horas no va a cambiar ni de horario ni de
+// resultado: no hace falta volver a leerlo nunca mas una vez pasado el
+// margen. Uno que empieza dentro de mas de una jornada tampoco suele tener
+// aun horario confirmado por TV, asi que tampoco merece la pena. Solo se
+// procesan partidos en juego, recien acabados, o de la proxima jornada.
 function filterByWindow(matches) {
   const now = Date.now()
   return matches.filter((m) => {
     const t = new Date(m.utcDate).getTime()
+    if (m.status === 'IN_PLAY' || m.status === 'PAUSED') return true
     return t >= now - RECENT_WINDOW_MS.past && t <= now + RECENT_WINDOW_MS.future
   })
 }
