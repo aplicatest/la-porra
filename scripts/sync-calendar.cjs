@@ -46,6 +46,20 @@ async function fetchLaLigaMatches() {
   return data.matches
 }
 
+function payloadChanged(existing, payload) {
+  for (const key of Object.keys(payload)) {
+    if (key === 'updatedAt') continue
+    const newVal = payload[key]
+    const oldVal = existing[key] ?? null
+    if (newVal instanceof Timestamp) {
+      if (!(oldVal instanceof Timestamp) || !newVal.isEqual(oldVal)) return true
+    } else if (newVal !== oldVal) {
+      return true
+    }
+  }
+  return false
+}
+
 // Sincroniza un partido: calendario (equipos, escudos, jornada, hora) siempre;
 // resultado y puntos solo la primera vez que football-data.org lo marca como
 // FINISHED (si ya estaba marcado como terminado localmente, no se vuelve a
@@ -88,6 +102,13 @@ async function syncMatch(fdMatch, calculatePoints) {
     payload.predictedUids = []
   }
 
+  // No escribir si no ha cambiado nada: la mayoria de las ejecuciones no
+  // traen ninguna novedad para un partido dado, y cada escritura de sobra
+  // cuenta contra la cuota diaria gratuita de Firestore.
+  if (existing && !payloadChanged(existing, payload)) {
+    return { isNew: false, kickoffChanged: false, justFinished: false, pointsScored: 0, skipped: true }
+  }
+
   await matchRef.set(payload, { merge: true })
 
   let pointsScored = 0
@@ -111,21 +132,45 @@ async function syncMatch(fdMatch, calculatePoints) {
   return { isNew: !existing, kickoffChanged, justFinished, pointsScored }
 }
 
+// En GitHub Actions (cada 10 min) solo se procesan partidos recientes o
+// proximos: los ya terminados hace tiempo o muy lejanos en el futuro no van
+// a cambiar, y recorrer la temporada entera (~380 partidos) en cada
+// ejecucion automatica supera la cuota gratuita diaria de Firestore
+// (380 x 2 x 144 ejecuciones/dia > 100.000 operaciones). Para una carga o
+// revision completa de toda la temporada, ejecutar el script en local
+// (npm run sync-calendar), donde no aplica esta ventana.
+const RECENT_WINDOW_MS = { past: 1 * 24 * 60 * 60 * 1000, future: 21 * 24 * 60 * 60 * 1000 }
+
+function filterByWindow(matches) {
+  const now = Date.now()
+  return matches.filter((m) => {
+    const t = new Date(m.utcDate).getTime()
+    return t >= now - RECENT_WINDOW_MS.past && t <= now + RECENT_WINDOW_MS.future
+  })
+}
+
 async function main() {
   const { calculatePoints } = await import('../src/utils/scoring.js')
+  const scoped = process.env.SYNC_SCOPE === 'recent'
 
   console.log('Descargando calendario de La Liga desde football-data.org...')
-  const matches = await fetchLaLigaMatches()
-  console.log(`${matches.length} partidos recibidos. Sincronizando con Firestore...`)
+  const allMatches = await fetchLaLigaMatches()
+  const matches = scoped ? filterByWindow(allMatches) : allMatches
+  console.log(
+    `${matches.length} de ${allMatches.length} partidos a sincronizar` +
+      (scoped ? ' (modo acotado a partidos recientes/próximos).' : ' (temporada completa).')
+  )
 
   let created = 0
   let updated = 0
+  let skipped = 0
   let kickoffFixes = 0
   let finishedNow = 0
 
   for (const fdMatch of matches) {
     const result = await syncMatch(fdMatch, calculatePoints)
-    if (result.isNew) created++
+    if (result.skipped) skipped++
+    else if (result.isNew) created++
     else updated++
     if (result.kickoffChanged) kickoffFixes++
     if (result.justFinished) {
@@ -137,7 +182,7 @@ async function main() {
   }
 
   console.log(
-    `Hecho: ${created} nuevos, ${updated} actualizados, ${finishedNow} recién finalizados` +
+    `Hecho: ${created} nuevos, ${updated} actualizados, ${skipped} sin cambios, ${finishedNow} recién finalizados` +
       (kickoffFixes ? `, ${kickoffFixes} con horario cambiado.` : '.')
   )
   process.exit(0)

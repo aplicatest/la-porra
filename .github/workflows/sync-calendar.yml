@@ -3,7 +3,12 @@ name: Sync La Liga calendar
 on:
   schedule:
     - cron: '*/10 * * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      full:
+        description: 'Sincronizar toda la temporada (no solo partidos recientes/próximos)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -29,3 +34,4 @@ jobs:
         env:
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          SYNC_SCOPE: ${{ (github.event_name == 'workflow_dispatch' && inputs.full) && '' || 'recent' }}

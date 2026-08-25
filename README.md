@@ -60,21 +60,19 @@ npm run build
 firebase deploy --only firestore:rules,firestore:indexes,hosting
 ```
 
-## Cargar el calendario de La Liga automáticamente
+## Calendario y resultados automáticos
 
-En vez de dar de alta cada partido a mano, hay un script que descarga el calendario completo de La Liga (equipos, escudos, jornada y hora) desde [football-data.org](https://www.football-data.org) (gratis) y lo vuelca en Firestore. Los jugadores nunca llaman a esa API directamente — siempre leen de Firestore, así que el límite de 10 peticiones/minuto de football-data.org no supone ningún problema, lo agotas tú solo una vez por sincronización.
+Un script (`scripts/sync-calendar.cjs`) descarga el calendario y los resultados de La Liga desde [football-data.org](https://www.football-data.org) (gratis) y los vuelca en Firestore: crea los partidos que faltan, actualiza horarios, y en cuanto un partido aparece como `FINISHED` calcula los puntos de todos los pronósticos automáticamente. Los jugadores nunca llaman a esa API directamente — siempre leen de Firestore.
 
-1. Regístrate gratis en [football-data.org](https://www.football-data.org/client/register) y copia tu API token.
-2. Genera una clave de servicio nueva (Firebase console → Configuración del proyecto → Cuentas de servicio → Generar nueva clave privada) y guárdala como `scripts/service-account.json` — **no la subas nunca a git** (ya está en `.gitignore`).
-3. Copia `scripts/.env.example` a `scripts/.env` y rellena `FOOTBALL_DATA_API_KEY` con tu token.
-4. Ejecuta:
-   ```bash
-   npm run sync-calendar
-   ```
+Se ejecuta solo, cada 10 minutos, vía [GitHub Actions](.github/workflows/sync-calendar.yml) — no hace falta que nadie lo lance a mano. Detalles de la configuración inicial (secretos, permisos del token) en el propio historial de este README/commits; si necesitas volver a montarlo desde cero, genera un token en football-data.org y una clave de servicio de Firebase, y guárdalos como secrets del repo (`FOOTBALL_DATA_API_KEY`, `FIREBASE_SERVICE_ACCOUNT`).
 
-El script crea los partidos que faltan y actualiza fecha/hora de los que ya existen (usa el id de football-data.org como id del documento, así no duplica nada). **Nunca toca** un partido que el admin ya haya marcado como finalizado a mano — solo actualiza calendario, nunca resultados. Si el horario de un partido cambia y ya había pronósticos guardados para él, el script les actualiza también el kickoff automáticamente.
+**Importante — cuota gratuita de Firestore**: las ejecuciones automáticas (cron) solo procesan partidos recientes o de las próximas ~3 semanas (`SYNC_SCOPE=recent` en el workflow), no la temporada completa — recorrer los ~380 partidos de toda la temporada cada 10 minutos supera de sobra el límite gratuito diario de Firestore (50.000 lecturas / 20.000 escrituras). Los partidos fuera de esa ventana ya cargados no necesitan revisarse porque no van a cambiar.
 
-Vuelve a ejecutarlo cuando La Liga vaya confirmando horarios de próximas jornadas (normalmente 1-2 semanas antes, cuando se fijan para TV) o si ves algún partido desactualizado.
+Para una carga o revisión completa de toda la temporada (por ejemplo, al principio de una temporada nueva), dos opciones:
+- En local: `npm run sync-calendar` (sin la variable `SYNC_SCOPE`, hace la temporada entera). Necesitas `scripts/.env` con tu `FOOTBALL_DATA_API_KEY` y `scripts/service-account.json` con una clave de servicio — ambos fuera de git (`.gitignore`).
+- Desde GitHub: pestaña Actions → "Sync La Liga calendar" → Run workflow → marca la casilla "Sincronizar toda la temporada".
+
+El script nunca pisa un resultado que el admin ya haya introducido a mano, y si cambia el horario de un partido con pronósticos ya guardados, les propaga el nuevo kickoff automáticamente.
 
 ## Notas de diseño
 
