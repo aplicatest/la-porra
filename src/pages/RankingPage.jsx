@@ -6,6 +6,7 @@ import RankingTable from '../components/RankingTable'
 export default function RankingPage() {
   const [predictions, setPredictions] = useState([])
   const [players, setPlayers] = useState({})
+  const [matches, setMatches] = useState([])
   const [view, setView] = useState('general')
   const [jornadaCursor, setJornadaCursor] = useState(null)
 
@@ -16,6 +17,12 @@ export default function RankingPage() {
         map[d.id] = d.data().name
       })
       setPlayers(map)
+    })
+  }, [])
+
+  useEffect(() => {
+    return onSnapshot(collection(db, 'matches'), (snap) => {
+      setMatches(snap.docs.map((d) => d.data()))
     })
   }, [])
 
@@ -45,6 +52,11 @@ export default function RankingPage() {
     setJornadaCursor(j)
     setView(j)
   }
+
+  const jornadaFinished =
+    view !== 'general' &&
+    matches.some((m) => m.jornada === view) &&
+    matches.filter((m) => m.jornada === view).every((m) => m.status === 'finished')
 
   const standings = useMemo(() => {
     const relevant = view === 'general' ? predictions : predictions.filter((p) => p.jornada === view)
@@ -85,6 +97,11 @@ export default function RankingPage() {
           </button>
         </div>
       </div>
+      {view !== 'general' && !jornadaFinished && (
+        <p className="ranking-provisional">
+          ⚠ Jornada aún no terminada — esta clasificación es provisional.
+        </p>
+      )}
       <RankingTable standings={standings} />
     </div>
   )

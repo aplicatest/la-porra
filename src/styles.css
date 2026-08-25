@@ -373,6 +373,13 @@ input {
   color: var(--gold);
 }
 
+.ranking-provisional {
+  text-align: center;
+  color: var(--gold);
+  font-size: 0.85rem;
+  margin: -0.5rem 0 1rem;
+}
+
 .ranking-table-wrap {
   overflow-x: auto;
   border-radius: var(--radius);
