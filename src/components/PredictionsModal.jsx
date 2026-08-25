@@ -1,4 +1,6 @@
 import { useEffect } from 'react'
+import PorrasStatus from './PorrasStatus'
+import { missingPredictors } from '../utils/missingPlayers'
 
 export default function PredictionsModal({ match, revealed, players, myUid, onClose }) {
   const finished = match.status === 'finished'
@@ -12,6 +14,10 @@ export default function PredictionsModal({ match, revealed, players, myUid, onCl
   }, [onClose])
 
   const sorted = finished ? [...revealed].sort((a, b) => (b.points ?? 0) - (a.points ?? 0)) : revealed
+  const missingNames = missingPredictors(
+    players,
+    revealed.map((p) => p.uid)
+  )
 
   function scoreClass(points) {
     if (!finished || points == null) return ''
@@ -60,6 +66,8 @@ export default function PredictionsModal({ match, revealed, players, myUid, onCl
             ))}
           </ul>
         )}
+
+        <PorrasStatus total={Object.keys(players).length} missingNames={missingNames} />
       </div>
     </div>
   )

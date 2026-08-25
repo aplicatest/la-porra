@@ -7,7 +7,10 @@ export default function PorrasStatus({ total, missingNames }) {
     <p className="porras-status">
       Porras: {done}/{total}
       {missingNames.length > 0 && (
-        <span className="porras-status__missing"> (faltan {joinNames(missingNames)})</span>
+        <span className="porras-status__missing">
+          {' '}
+          ({missingNames.length === 1 ? 'falta' : 'faltan'} {joinNames(missingNames)})
+        </span>
       )}
     </p>
   )

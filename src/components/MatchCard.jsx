@@ -12,10 +12,6 @@ export default function MatchCard({ match, now, myPrediction, revealed, players 
 
   const totalPlayers = Object.keys(players).length
   const missingBeforeKickoff = missingPredictors(players, match.predictedUids)
-  const missingAfterKickoff = missingPredictors(
-    players,
-    revealed.map((p) => p.uid)
-  )
 
   const [homeGoals, setHomeGoals] = useState(myPrediction?.homeGoals ?? '')
   const [awayGoals, setAwayGoals] = useState(myPrediction?.awayGoals ?? '')
@@ -124,10 +120,7 @@ export default function MatchCard({ match, now, myPrediction, revealed, players 
             {myPrediction ? `${myPrediction.homeGoals} - ${myPrediction.awayGoals}` : 'no pronosticaste'}
             {myPrediction?.points != null && <strong> ({myPrediction.points} pts)</strong>}
           </p>
-          <div className="see-all-group">
-            <PorrasStatus total={totalPlayers} missingNames={missingAfterKickoff} />
-            <p className="see-all-link">Ver pronósticos de todos →</p>
-          </div>
+          <p className="see-all-link">Ver pronósticos de todos →</p>
         </div>
       )}
 

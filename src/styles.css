@@ -273,15 +273,13 @@ input {
   font-size: 0.8rem;
   color: var(--text-muted);
 }
+.modal-card .porras-status {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
 .porras-status__missing {
   font-style: italic;
-}
-
-.see-all-group {
-  margin-top: 0.5rem;
-}
-.see-all-group .porras-status {
-  margin: 0 0 0.15rem;
 }
 
 .modal-overlay {
