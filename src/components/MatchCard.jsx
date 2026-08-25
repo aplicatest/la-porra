@@ -9,6 +9,7 @@ import { missingPredictors } from '../utils/missingPlayers'
 export default function MatchCard({ match, now, myPrediction, revealed, players }) {
   const { player } = useAuth()
   const started = match.kickoff?.toMillis() <= now
+  const finished = match.status === 'finished'
 
   const totalPlayers = Object.keys(players).length
   const missingBeforeKickoff = missingPredictors(players, match.predictedUids)
@@ -61,52 +62,62 @@ export default function MatchCard({ match, now, myPrediction, revealed, players 
 
   return (
     <div className={`match-card ${started ? 'started' : ''}`}>
-      <div className="match-card__teams">
-        <span>
-          {match.homeCrest && <img className="crest" src={match.homeCrest} alt="" />}
-          {match.homeTeam}
-        </span>
-        <span className="vs">vs</span>
-        <span>
-          {match.awayTeam}
-          {match.awayCrest && <img className="crest" src={match.awayCrest} alt="" />}
-        </span>
-      </div>
       <div className="match-card__kickoff">
         {match.kickoff?.toDate().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
       </div>
 
-      {match.status === 'finished' && (
-        <div className="match-card__result">
-          Resultado: {match.homeGoals} - {match.awayGoals}
+      <div className="match-card__scoreboard">
+        <div className="match-card__team">
+          {match.homeCrest && <img className="crest crest--lg" src={match.homeCrest} alt="" />}
+          <span className="match-card__team-name">{match.homeShortName || match.homeTeam}</span>
         </div>
-      )}
+
+        <div className="match-card__middle">
+          {!started ? (
+            <form onSubmit={handleSubmit} className="prediction-form">
+              <div className="prediction-form__inputs">
+                <input
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={homeGoals}
+                  onChange={(e) => setHomeGoals(e.target.value)}
+                  required
+                />
+                <span>-</span>
+                <input
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={awayGoals}
+                  onChange={(e) => setAwayGoals(e.target.value)}
+                  required
+                />
+              </div>
+              <button type="submit" disabled={saving}>
+                {myPrediction ? 'Actualizar' : 'Pronosticar'}
+              </button>
+            </form>
+          ) : finished ? (
+            <div className="match-card__final-score">
+              {match.homeGoals} - {match.awayGoals}
+            </div>
+          ) : (
+            <div className="match-card__live">Partido en juego</div>
+          )}
+        </div>
+
+        <div className="match-card__team">
+          {match.awayCrest && <img className="crest crest--lg" src={match.awayCrest} alt="" />}
+          <span className="match-card__team-name">{match.awayShortName || match.awayTeam}</span>
+        </div>
+      </div>
 
       {!started ? (
-        <form onSubmit={handleSubmit} className="prediction-form">
-          <input
-            type="number"
-            min="0"
-            inputMode="numeric"
-            value={homeGoals}
-            onChange={(e) => setHomeGoals(e.target.value)}
-            required
-          />
-          <span>-</span>
-          <input
-            type="number"
-            min="0"
-            inputMode="numeric"
-            value={awayGoals}
-            onChange={(e) => setAwayGoals(e.target.value)}
-            required
-          />
-          <button type="submit" disabled={saving}>
-            {myPrediction ? 'Actualizar' : 'Pronosticar'}
-          </button>
+        <>
           {saveError && <p className="error">{saveError}</p>}
           <PorrasStatus total={totalPlayers} missingNames={missingBeforeKickoff} />
-        </form>
+        </>
       ) : (
         <div
           className="match-card__predictions"

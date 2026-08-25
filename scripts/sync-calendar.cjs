@@ -70,6 +70,8 @@ async function syncMatch(fdMatch, calculatePoints) {
     jornada: fdMatch.matchday,
     homeTeam: fdMatch.homeTeam.name,
     awayTeam: fdMatch.awayTeam.name,
+    homeShortName: fdMatch.homeTeam.shortName || null,
+    awayShortName: fdMatch.awayTeam.shortName || null,
     homeCrest: fdMatch.homeTeam.crest || null,
     awayCrest: fdMatch.awayTeam.crest || null,
     kickoff: newKickoff,
