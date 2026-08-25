@@ -124,8 +124,10 @@ export default function MatchCard({ match, now, myPrediction, revealed, players 
             {myPrediction ? `${myPrediction.homeGoals} - ${myPrediction.awayGoals}` : 'no pronosticaste'}
             {myPrediction?.points != null && <strong> ({myPrediction.points} pts)</strong>}
           </p>
-          <PorrasStatus total={totalPlayers} missingNames={missingAfterKickoff} />
-          <p className="see-all-link">Ver pronósticos de todos →</p>
+          <div className="see-all-group">
+            <PorrasStatus total={totalPlayers} missingNames={missingAfterKickoff} />
+            <p className="see-all-link">Ver pronósticos de todos →</p>
+          </div>
         </div>
       )}
 

@@ -2,7 +2,11 @@ export function missingPredictors(players, predictedUids) {
   const predicted = new Set(predictedUids || [])
   return Object.entries(players)
     .filter(([uid]) => !predicted.has(uid))
-    .map(([, name]) => name)
+    .map(([, name]) => firstName(name))
+}
+
+function firstName(name) {
+  return name?.trim().split(/\s+/)[0] || name
 }
 
 export function joinNames(names) {

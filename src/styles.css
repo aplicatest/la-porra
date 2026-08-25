@@ -277,6 +277,13 @@ input {
   font-style: italic;
 }
 
+.see-all-group {
+  margin-top: 0.5rem;
+}
+.see-all-group .porras-status {
+  margin: 0 0 0.15rem;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -333,13 +340,8 @@ input {
   background: var(--surface-alt);
   border: 2px solid transparent;
 }
-.modal-predictions li.me {
-  background: var(--surface);
-}
-.modal-predictions li.me .modal-predictions__name::after {
-  content: ' (tú)';
-  font-weight: 400;
-  color: var(--text-muted);
+.modal-predictions li.me .modal-predictions__name {
+  color: var(--accent);
 }
 .modal-predictions li.green {
   border-color: var(--success);
