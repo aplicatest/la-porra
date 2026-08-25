@@ -8,6 +8,7 @@
   --accent: #f97316;
   --accent-dark: #ea580c;
   --success: #22c55e;
+  --gold: #eab308;
   --danger: #f87171;
   --radius: 10px;
 }
@@ -264,6 +265,18 @@ input {
   font-size: 0.85rem;
 }
 
+.porras-status {
+  flex-basis: 100%;
+  width: 100%;
+  text-align: center;
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.porras-status__missing {
+  font-style: italic;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -318,9 +331,21 @@ input {
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
   background: var(--surface-alt);
+  border: 2px solid transparent;
 }
 .modal-predictions li.me {
-  outline: 1px solid var(--accent);
+  background: var(--surface);
+}
+.modal-predictions li.me .modal-predictions__name::after {
+  content: ' (tú)';
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.modal-predictions li.green {
+  border-color: var(--success);
+}
+.modal-predictions li.gold {
+  border-color: var(--gold);
 }
 .modal-predictions__name {
   flex: 1;
@@ -334,6 +359,12 @@ input {
   color: var(--accent);
   min-width: 3.5rem;
   text-align: right;
+}
+.modal-predictions li.green .modal-predictions__points {
+  color: var(--success);
+}
+.modal-predictions li.gold .modal-predictions__points {
+  color: var(--gold);
 }
 
 .ranking-table-wrap {

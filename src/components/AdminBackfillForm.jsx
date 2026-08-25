@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react'
-import { collection, doc, onSnapshot, orderBy, query, setDoc, Timestamp } from 'firebase/firestore'
+import {
+  arrayUnion,
+  collection,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+  setDoc,
+  Timestamp,
+  updateDoc,
+} from 'firebase/firestore'
 import { db } from '../firebase'
 import { recomputeMatchPoints } from '../utils/recomputePoints'
 
@@ -46,6 +56,9 @@ export default function AdminBackfillForm() {
         kickoff: match.kickoff,
         points: null,
         createdAt: Timestamp.now(),
+      })
+      await updateDoc(doc(db, 'matches', matchId), {
+        predictedUids: arrayUnion(uid),
       })
 
       let msg = `Pronóstico de ${player.name} guardado.`

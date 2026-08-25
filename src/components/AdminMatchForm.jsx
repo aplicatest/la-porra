@@ -23,6 +23,7 @@ export default function AdminMatchForm() {
         status: 'scheduled',
         homeGoals: null,
         awayGoals: null,
+        predictedUids: [],
         createdAt: Timestamp.now(),
       })
       setJornada('')

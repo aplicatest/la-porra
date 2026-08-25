@@ -57,7 +57,21 @@ service cloud.firestore {
       // para no dar ni siquiera esto a cualquiera que solo haya iniciado
       // sesion de Google sin conocer el codigo.
       allow read: if isPlayer();
-      allow create, update, delete: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        // Cualquier jugador puede apuntarse a si mismo en predictedUids al
+        // pronosticar (solo añadir su propio uid, nunca quitar a otros ni
+        // añadir a nadie mas), para poder mostrar "quien falta" sin revelar
+        // marcadores de nadie antes del kickoff.
+        isPlayer()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['predictedUids'])
+        && request.resource.data.predictedUids.hasAll(
+          ('predictedUids' in resource.data) ? resource.data.predictedUids : []
+        )
+        && request.resource.data.predictedUids.hasAny([request.auth.uid])
+        && request.resource.data.predictedUids.size()
+          <= (('predictedUids' in resource.data) ? resource.data.predictedUids.size() : 0) + 1
+      );
     }
 
     match /predictions/{predictionId} {

@@ -1,12 +1,21 @@
 import { useState } from 'react'
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { arrayUnion, doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import PredictionsModal from './PredictionsModal'
+import PorrasStatus from './PorrasStatus'
+import { missingPredictors } from '../utils/missingPlayers'
 
 export default function MatchCard({ match, now, myPrediction, revealed, players }) {
   const { player } = useAuth()
   const started = match.kickoff?.toMillis() <= now
+
+  const totalPlayers = Object.keys(players).length
+  const missingBeforeKickoff = missingPredictors(players, match.predictedUids)
+  const missingAfterKickoff = missingPredictors(
+    players,
+    revealed.map((p) => p.uid)
+  )
 
   const [homeGoals, setHomeGoals] = useState(myPrediction?.homeGoals ?? '')
   const [awayGoals, setAwayGoals] = useState(myPrediction?.awayGoals ?? '')
@@ -41,6 +50,11 @@ export default function MatchCard({ match, now, myPrediction, revealed, players 
         kickoff: match.kickoff,
         points: null,
         createdAt: myPrediction?.createdAt ?? serverTimestamp(),
+      })
+      // Registro aparte (sin marcador) de quien ha pronosticado, para poder
+      // mostrar "Porras: X/Y" antes del kickoff sin revelar el contenido.
+      await updateDoc(doc(db, 'matches', match.id), {
+        predictedUids: arrayUnion(player.uid),
       })
     } catch (err) {
       setSaveError('No se pudo guardar el pronóstico (¿ya ha empezado el partido?).')
@@ -95,6 +109,7 @@ export default function MatchCard({ match, now, myPrediction, revealed, players 
             {myPrediction ? 'Actualizar' : 'Pronosticar'}
           </button>
           {saveError && <p className="error">{saveError}</p>}
+          <PorrasStatus total={totalPlayers} missingNames={missingBeforeKickoff} />
         </form>
       ) : (
         <div
@@ -109,6 +124,7 @@ export default function MatchCard({ match, now, myPrediction, revealed, players 
             {myPrediction ? `${myPrediction.homeGoals} - ${myPrediction.awayGoals}` : 'no pronosticaste'}
             {myPrediction?.points != null && <strong> ({myPrediction.points} pts)</strong>}
           </p>
+          <PorrasStatus total={totalPlayers} missingNames={missingAfterKickoff} />
           <p className="see-all-link">Ver pronósticos de todos →</p>
         </div>
       )}

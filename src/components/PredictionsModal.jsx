@@ -1,4 +1,6 @@
 import { useEffect } from 'react'
+import PorrasStatus from './PorrasStatus'
+import { missingPredictors } from '../utils/missingPlayers'
 
 export default function PredictionsModal({ match, revealed, players, myUid, onClose }) {
   const finished = match.status === 'finished'
@@ -12,6 +14,17 @@ export default function PredictionsModal({ match, revealed, players, myUid, onCl
   }, [onClose])
 
   const sorted = finished ? [...revealed].sort((a, b) => (b.points ?? 0) - (a.points ?? 0)) : revealed
+  const missingNames = missingPredictors(
+    players,
+    revealed.map((p) => p.uid)
+  )
+
+  function scoreClass(points) {
+    if (!finished || points == null) return ''
+    if (points === 8) return 'gold'
+    if (points === 3) return 'green'
+    return ''
+  }
 
   function handleOverlayClick(e) {
     if (e.target === e.currentTarget) onClose()
@@ -34,12 +47,14 @@ export default function PredictionsModal({ match, revealed, players, myUid, onCl
           </p>
         )}
 
+        <PorrasStatus total={Object.keys(players).length} missingNames={missingNames} />
+
         {sorted.length === 0 ? (
           <p className="modal-note">Nadie pronosticó este partido.</p>
         ) : (
           <ul className="modal-predictions">
             {sorted.map((p) => (
-              <li key={p.id} className={p.uid === myUid ? 'me' : ''}>
+              <li key={p.id} className={`${p.uid === myUid ? 'me' : ''} ${scoreClass(p.points)}`.trim()}>
                 <span className="modal-predictions__name">{players[p.uid] || p.playerName}</span>
                 <span className="modal-predictions__score">
                   {p.homeGoals} - {p.awayGoals}

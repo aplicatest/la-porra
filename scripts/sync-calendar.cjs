@@ -81,7 +81,10 @@ async function syncMatch(fdMatch, calculatePoints) {
     payload.homeGoals = isFinishedNow ? fdScore.home : existing?.homeGoals ?? null
     payload.awayGoals = isFinishedNow ? fdScore.away : existing?.awayGoals ?? null
   }
-  if (!existing) payload.createdAt = Timestamp.now()
+  if (!existing) {
+    payload.createdAt = Timestamp.now()
+    payload.predictedUids = []
+  }
 
   await matchRef.set(payload, { merge: true })
 
