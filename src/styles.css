@@ -356,7 +356,7 @@ input {
 }
 .modal-predictions__points {
   font-weight: 700;
-  color: var(--accent);
+  color: var(--text-muted);
   min-width: 3.5rem;
   text-align: right;
 }
