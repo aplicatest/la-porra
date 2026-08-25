@@ -280,7 +280,8 @@ input {
   gap: 0.3rem;
 }
 .prediction-form input {
-  width: 44px;
+  width: 64px;
+  padding: 0.5rem 0.35rem;
   text-align: center;
 }
 .prediction-form button {
