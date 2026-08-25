@@ -97,11 +97,9 @@ export default function RankingPage() {
           </button>
         </div>
       </div>
-      {view !== 'general' && !jornadaFinished && (
-        <p className="ranking-provisional">
-          ⚠ Jornada aún no terminada — esta clasificación es provisional.
-        </p>
-      )}
+      <p className={`ranking-provisional ${view !== 'general' && !jornadaFinished ? '' : 'hidden'}`}>
+        ⚠ Jornada aún no terminada — esta clasificación es provisional.
+      </p>
       <RankingTable standings={standings} />
     </div>
   )

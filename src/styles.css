@@ -379,6 +379,9 @@ input {
   font-size: 0.85rem;
   margin: -0.5rem 0 1rem;
 }
+.ranking-provisional.hidden {
+  visibility: hidden;
+}
 
 .ranking-table-wrap {
   overflow-x: auto;
