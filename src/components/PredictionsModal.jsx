@@ -44,7 +44,11 @@ export default function PredictionsModal({ match, revealed, players, myUid, onCl
                 <span className="modal-predictions__score">
                   {p.homeGoals} - {p.awayGoals}
                 </span>
-                {finished && <span className="modal-predictions__points">{p.points ?? 0} pts</span>}
+                {finished && (
+                  <span className="modal-predictions__points">
+                    {p.points != null ? `${p.points} pts` : 'pendiente'}
+                  </span>
+                )}
               </li>
             ))}
           </ul>
