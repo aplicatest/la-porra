@@ -4,6 +4,7 @@ import { db } from '../firebase'
 import AdminMatchForm from '../components/AdminMatchForm'
 import AdminResultForm from '../components/AdminResultForm'
 import AdminBackfillForm from '../components/AdminBackfillForm'
+import AdminPoolForm from '../components/AdminPoolForm'
 
 export default function AdminPage() {
   const [matches, setMatches] = useState([])
@@ -32,6 +33,14 @@ export default function AdminPage() {
           te dijeron. Si el partido ya tiene resultado, recalcula los puntos al instante.
         </p>
         <AdminBackfillForm />
+      </section>
+      <section>
+        <h2>Bote: aportaciones por jornada</h2>
+        <p className="admin-note">
+          Introduce quién paga y cuánto cada jornada, en Porra o Fantasy. En caso de empate, reparte tú el
+          importe manualmente entre los empatados (por ejemplo, dos últimos a 1 € cada uno en vez de 2 € uno solo).
+        </p>
+        <AdminPoolForm />
       </section>
       <section>
         <h2>Partidos</h2>

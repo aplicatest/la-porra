@@ -12,6 +12,7 @@ export default function Header() {
           Partidos
         </NavLink>
         <NavLink to="/ranking">Clasificación</NavLink>
+        <NavLink to="/bote">Bote</NavLink>
         {player?.isAdmin && <NavLink to="/admin">Admin</NavLink>}
       </nav>
       <div className="app-header__player">

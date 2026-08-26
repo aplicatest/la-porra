@@ -135,5 +135,19 @@ service cloud.firestore {
 
       allow delete: if isAdmin();
     }
+
+    match /poolContributions/{id} {
+      // Aportaciones al bote (porra/fantasy), introducidas a mano por el
+      // admin: quien, cuanto y en que jornada. Visible para todo el grupo,
+      // solo el admin puede añadir o corregir (borrando y repitiendo).
+      allow read: if isPlayer();
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['game', 'jornada', 'uid', 'playerName', 'amount', 'createdAt'])
+        && request.resource.data.game in ['porra', 'fantasy']
+        && request.resource.data.jornada is int && request.resource.data.jornada > 0
+        && request.resource.data.amount is number && request.resource.data.amount > 0;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
   }
 }

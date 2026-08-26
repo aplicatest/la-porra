@@ -417,6 +417,14 @@ input {
   visibility: hidden;
 }
 
+.pool-total {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 0 0 1rem;
+}
+
 .ranking-table-wrap {
   overflow-x: auto;
   border-radius: var(--radius);
