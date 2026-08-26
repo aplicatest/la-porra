@@ -139,7 +139,10 @@ async function syncMatch(fdMatch, calculatePoints) {
 // (380 x 2 x 144 ejecuciones/dia > 100.000 operaciones). Para una carga o
 // revision completa de toda la temporada, ejecutar el script en local
 // (npm run sync-calendar), donde no aplica esta ventana.
-const RECENT_WINDOW_MS = { past: 5 * 60 * 60 * 1000, future: 8 * 24 * 60 * 60 * 1000 }
+// "past" a 24h (no 5h) a proposito: da margen para recuperarse solo de un
+// corte temporal (cuota agotada, Actions caido, etc.) sin dejar un partido
+// colgado para siempre fuera de la ventana. Sigue siendo un coste minimo.
+const RECENT_WINDOW_MS = { past: 24 * 60 * 60 * 1000, future: 8 * 24 * 60 * 60 * 1000 }
 
 // Un partido ya finalizado hace horas no va a cambiar ni de horario ni de
 // resultado: no hace falta volver a leerlo nunca mas una vez pasado el

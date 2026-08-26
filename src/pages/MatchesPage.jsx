@@ -12,11 +12,12 @@ export default function MatchesPage() {
   const [revealedPredictions, setRevealedPredictions] = useState({})
   const [selectedJornada, setSelectedJornada] = useState(null)
   const [now, setNow] = useState(() => Date.now())
+  const [revealCutoff, setRevealCutoff] = useState(() => Date.now())
 
-  // Recalcula "now" cada 10s para que un partido se bloquee/revele solo, sin
-  // necesidad de recargar la pagina justo cuando empieza. Ademas se refresca
-  // al instante al volver a la pestaña, porque los navegadores pausan los
-  // intervalos en pestañas en segundo plano y "now" podria quedar desfasado.
+  // Recalcula "now" cada 10s para que el formulario de pronostico se
+  // bloquee solo en el momento justo — esto es puramente local (compara
+  // contra el kickoff que ya tenemos en memoria), no dispara ninguna
+  // consulta a Firestore, asi que no tiene coste.
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 10000)
     function handleVisibility() {
@@ -27,6 +28,16 @@ export default function MatchesPage() {
       clearInterval(interval)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
+  }, [])
+
+  // revealCutoff se refresca mucho menos a menudo: cada cambio reconstruye
+  // la consulta de "pronosticos revelados" y vuelve a leerla entera de
+  // Firestore, asi que hacerlo cada 10s (como antes) multiplicaba las
+  // lecturas sin necesidad — nadie necesita el segundo exacto en que se
+  // revela el pronostico de otro.
+  useEffect(() => {
+    const interval = setInterval(() => setRevealCutoff(Date.now()), 3 * 60 * 1000)
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -59,10 +70,16 @@ export default function MatchesPage() {
   }, [player])
 
   useEffect(() => {
-    // Solo se piden los pronosticos cuyo kickoff ya paso: es la unica forma
-    // de que la regla de seguridad (ver firestore.rules) pueda garantizar,
-    // a partir del propio filtro de la consulta, que la lectura es valida.
-    const q = query(collection(db, 'predictions'), where('kickoff', '<=', Timestamp.fromMillis(now)))
+    // Acotada a la jornada que se esta viendo (no toda la temporada) y con
+    // kickoff <= revealCutoff: la combinacion de ambos filtros es la que
+    // permite a la regla de seguridad (ver firestore.rules) garantizar, a
+    // partir del propio filtro de la consulta, que la lectura es valida.
+    if (selectedJornada === null) return
+    const q = query(
+      collection(db, 'predictions'),
+      where('jornada', '==', selectedJornada),
+      where('kickoff', '<=', Timestamp.fromMillis(revealCutoff))
+    )
     return onSnapshot(q, (snap) => {
       const byMatch = {}
       snap.docs.forEach((d) => {
@@ -72,7 +89,7 @@ export default function MatchesPage() {
       })
       setRevealedPredictions(byMatch)
     })
-  }, [now])
+  }, [selectedJornada, revealCutoff])
 
   const jornadas = useMemo(() => {
     const set = new Set(matches.map((m) => m.jornada))
