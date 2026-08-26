@@ -30,13 +30,17 @@ export default function MatchesPage() {
     }
   }, [])
 
-  // revealCutoff se refresca mucho menos a menudo: cada cambio reconstruye
-  // la consulta de "pronosticos revelados" y vuelve a leerla entera de
-  // Firestore, asi que hacerlo cada 10s (como antes) multiplicaba las
-  // lecturas sin necesidad — nadie necesita el segundo exacto en que se
-  // revela el pronostico de otro.
+  // revealCutoff se refresca cada 10 min: cada cambio reconstruye la
+  // consulta de "pronosticos revelados" y vuelve a leerla entera de
+  // Firestore. No afecta al cierre de pronosticos (eso es "now", aparte,
+  // y ademas lo garantiza la regla de seguridad del servidor pase lo que
+  // pase aqui) ni a la rapidez con la que se ven los puntos finales (eso
+  // llega en tiempo real en cuanto el script de sync los escribe, sin
+  // depender de este temporizador). Solo retrasa un poco lo rapido que
+  // aparecen los pronosticos de los demas justo al empezar un partido,
+  // algo que no necesita precisión de segundos ni de pocos minutos.
   useEffect(() => {
-    const interval = setInterval(() => setRevealCutoff(Date.now()), 3 * 60 * 1000)
+    const interval = setInterval(() => setRevealCutoff(Date.now()), 10 * 60 * 1000)
     return () => clearInterval(interval)
   }, [])
 
